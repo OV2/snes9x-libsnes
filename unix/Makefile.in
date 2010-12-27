@@ -9,7 +9,7 @@
 OS         = `uname -s -r -m|sed \"s/ /-/g\"|tr \"[A-Z]\" \"[a-z]\"|tr \"/()\" \"___\"`
 BUILDDIR   = .
 
-OBJECTS    = ../apu/apu.o ../apu/SNES_SPC.o ../apu/SNES_SPC_misc.o ../apu/SNES_SPC_state.o ../apu/SPC_DSP.o ../apu/SPC_Filter.o ../bsx.o ../cheats.o ../cheats2.o ../clip.o ../conffile.o ../controls.o ../cpu.o ../cpuexec.o ../cpuops.o ../crosshairs.o ../dma.o ../dsp.o ../dsp1.o ../dsp2.o ../dsp3.o ../dsp4.o ../gfx.o ../globals.o ../logger.o ../memmap.o ../movie.o ../obc1.o ../ppu.o ../reader.o ../sa1.o ../sa1cpu.o ../screenshot.o ../sdd1.o ../sdd1emu.o ../seta.o ../seta010.o ../seta011.o ../seta018.o ../snapshot.o ../snes9x.o ../spc7110.o ../srtc.o ../tile.o ../filter/2xsai.o ../filter/blit.o ../filter/epx.o ../filter/hq2x.o ../filter/snes_ntsc.o unix.o x11.o
+OBJECTS    = ../apu/apu.o ../apu/SNES_SPC.o ../apu/SNES_SPC_misc.o ../apu/SNES_SPC_state.o ../apu/SPC_DSP.o ../apu/SPC_Filter.o ../bsx.o ../cheats.o ../cheats2.o ../clip.o ../conffile.o ../controls.o ../cpu.o ../cpuexec.o ../cpuops.o ../crosshairs.o ../dma.o ../dsp.o ../dsp1.o ../dsp2.o ../dsp3.o ../dsp4.o ../gfx.o ../globals.o ../logger.o ../memmap.o ../movie.o ../obc1.o ../ppu.o ../reader.o ../sa1.o ../sa1cpu.o ../screenshot.o ../sdd1.o ../sdd1emu.o ../seta.o ../seta010.o ../seta011.o ../seta018.o ../snapshot.o ../snes9x.o ../spc7110.o ../srtc.o ../tile.o ../filter/2xsai.o ../filter/blit.o ../filter/epx.o ../filter/hq2x.o ../filter/snes_ntsc.o libsnes.o
 DEFS       = -DMITSHM -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DCORRECT_VRAM_READS
 
 ifdef S9XZSNESFX
@@ -49,12 +49,12 @@ NASM       = @S9XNASM@
 GASM       = @CXX@
 INCLUDES   = -I. -I.. -I../apu/ -I../unzip/ -I../jma/ -I../filter/
 
-CCFLAGS    = @S9XFLGS@ @S9XDEFS@ $(DEFS)
+CCFLAGS    = @S9XFLGS@ @S9XDEFS@ $(DEFS) -fPIC
 CFLAGS     = $(CCFLAGS)
 
 .SUFFIXES: .o .cpp .c .cc .h .m .i .s .asm .obj
 
-all: Makefile configure snes9x
+all: Makefile configure libsnes.so
 
 Makefile: configure Makefile.in
 	@echo "Makefile is older than configure or in-file. Run configure or touch Makefile."
@@ -64,8 +64,8 @@ configure: configure.ac
 	@echo "configure is older than in-file. Run autoconf or touch configure."
 	exit 1
 
-snes9x: $(OBJECTS)
-	$(CCC) $(INCLUDES) -o $@ $(OBJECTS) -lm @S9XLIBS@
+libsnes.so: $(OBJECTS)
+	$(CCC) -fPIC -shared $(INCLUDES) -o $@ $(OBJECTS) -lm @S9XLIBS@
 
 ../jma/s9x-jma.o: ../jma/s9x-jma.cpp
 	$(CCC) $(INCLUDES) -c $(CCFLAGS) -fexceptions $*.cpp -o $@
