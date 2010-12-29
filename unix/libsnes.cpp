@@ -66,10 +66,19 @@ unsigned snes_library_revision_minor()
 }
 
 void snes_power()
-{}
+{
+	S9xReset();
+}
 
 void snes_reset()
-{}
+{
+	S9xMovieUpdateOnReset();
+	if (S9xMoviePlaying())
+	{
+		S9xMovieStop(true);
+	}
+	S9xSoftReset();
+}
 
 void snes_set_controller_port_device(bool, unsigned)
 {}
