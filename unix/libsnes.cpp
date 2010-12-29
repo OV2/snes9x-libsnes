@@ -55,6 +55,16 @@ static void S9xAudioCallback(void*)
       s9x_audio_cb((uint16_t)audio_buf[i], (uint16_t)audio_buf[i + 1]);
 }
 
+unsigned snes_library_revision_major()
+{
+   return 1;
+}
+
+unsigned snes_library_revision_minor()
+{
+   return 1;
+}
+
 void snes_power()
 {}
 
