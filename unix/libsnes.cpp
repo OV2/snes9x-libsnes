@@ -77,7 +77,7 @@ void snes_set_controller_port_device(bool, unsigned)
 void snes_cheat_reset()
 {}
 
-void snes_cheat_set(int, bool, const char*)
+void snes_cheat_set(unsigned, bool, const char*)
 {}
 
 bool snes_load_cartridge_bsx_slotted(
