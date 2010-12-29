@@ -274,7 +274,9 @@ void snes_term()
 
 
 bool snes_get_region()
-{ return SNES_REGION_NTSC; }
+{ 
+   return Settings.PAL ? SNES_REGION_PAL : SNES_REGION_NTSC; 
+}
 
 // We need to get really dirty here... Have to MMAP a save file :(
 static void *sram_mapped = NULL;
