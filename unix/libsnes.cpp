@@ -67,17 +67,17 @@ unsigned snes_library_revision_minor()
 
 void snes_power()
 {
-	S9xReset();
+   S9xReset();
 }
 
 void snes_reset()
 {
-	S9xMovieUpdateOnReset();
-	if (S9xMoviePlaying())
-	{
-		S9xMovieStop(true);
-	}
-	S9xSoftReset();
+   S9xMovieUpdateOnReset();
+   if (S9xMoviePlaying())
+   {
+      S9xMovieStop(true);
+   }
+   S9xSoftReset();
 }
 
 void snes_set_controller_port_device(bool, unsigned)
@@ -90,34 +90,34 @@ void snes_cheat_set(unsigned, bool, const char*)
 {}
 
 bool snes_load_cartridge_bsx_slotted(
-  const char *, const uint8_t *, unsigned,
-  const char *, const uint8_t *, unsigned
-)
+      const char *, const uint8_t *, unsigned,
+      const char *, const uint8_t *, unsigned
+      )
 {
    return false;
 }
 
 bool snes_load_cartridge_bsx(
-  const char *, const uint8_t *, unsigned,
-  const char *, const uint8_t *, unsigned
-)
+      const char *, const uint8_t *, unsigned,
+      const char *, const uint8_t *, unsigned
+      )
 {
    return false;
 }
 
 bool snes_load_cartridge_sufami_turbo(
-  const char *, const uint8_t *, unsigned,
-  const char *, const uint8_t *, unsigned,
-  const char *, const uint8_t *, unsigned
-)
+      const char *, const uint8_t *, unsigned,
+      const char *, const uint8_t *, unsigned,
+      const char *, const uint8_t *, unsigned
+      )
 {
    return false;
 }
 
 bool snes_load_cartridge_super_game_boy(
-  const char *, const uint8_t *, unsigned,
-  const char *, const uint8_t *, unsigned 
-)
+      const char *, const uint8_t *, unsigned,
+      const char *, const uint8_t *, unsigned 
+      )
 {
    return false;
 }
@@ -127,30 +127,30 @@ void snes_init()
 {
    memset(&Settings, 0, sizeof(Settings));
    Settings.MouseMaster = TRUE;
-	Settings.SuperScopeMaster = TRUE;
-	Settings.JustifierMaster = TRUE;
-	Settings.MultiPlayer5Master = TRUE;
-	Settings.FrameTimePAL = 20000;
-	Settings.FrameTimeNTSC = 16667;
-	Settings.SixteenBitSound = TRUE;
-	Settings.Stereo = TRUE;
-	Settings.SoundPlaybackRate = 32000;
-	Settings.SoundInputRate = 32000;
-	Settings.SupportHiRes = TRUE;
-	Settings.Transparency = TRUE;
-	Settings.AutoDisplayMessages = TRUE;
-	Settings.InitialInfoStringTimeout = 120;
-	Settings.HDMATimingHack = 100;
-	Settings.BlockInvalidVRAMAccessMaster = TRUE;
-	Settings.StopEmulation = TRUE;
-	Settings.WrongMovieStateProtection = TRUE;
-	Settings.DumpStreamsMaxFrames = -1;
-	Settings.StretchScreenshots = 1;
-	Settings.SnapshotScreenshots = TRUE;
-	Settings.SkipFrames = AUTO_FRAMERATE;
-	Settings.TurboSkipFrames = 15;
-	Settings.CartAName[0] = 0;
-	Settings.CartBName[0] = 0;
+   Settings.SuperScopeMaster = TRUE;
+   Settings.JustifierMaster = TRUE;
+   Settings.MultiPlayer5Master = TRUE;
+   Settings.FrameTimePAL = 20000;
+   Settings.FrameTimeNTSC = 16667;
+   Settings.SixteenBitSound = TRUE;
+   Settings.Stereo = TRUE;
+   Settings.SoundPlaybackRate = 32000;
+   Settings.SoundInputRate = 32000;
+   Settings.SupportHiRes = TRUE;
+   Settings.Transparency = TRUE;
+   Settings.AutoDisplayMessages = TRUE;
+   Settings.InitialInfoStringTimeout = 120;
+   Settings.HDMATimingHack = 100;
+   Settings.BlockInvalidVRAMAccessMaster = TRUE;
+   Settings.StopEmulation = TRUE;
+   Settings.WrongMovieStateProtection = TRUE;
+   Settings.DumpStreamsMaxFrames = -1;
+   Settings.StretchScreenshots = 1;
+   Settings.SnapshotScreenshots = TRUE;
+   Settings.SkipFrames = AUTO_FRAMERATE;
+   Settings.TurboSkipFrames = 15;
+   Settings.CartAName[0] = 0;
+   Settings.CartBName[0] = 0;
    Settings.AutoSaveDelay = 1;
 
    CPU.Flags = 0;
@@ -197,30 +197,30 @@ void snes_init()
 static void map_buttons()
 {
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_A), "Joypad1 A");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_B), "Joypad1 B");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_X), "Joypad1 X");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_Y), "Joypad1 Y");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_SELECT), "Joypad1 Select");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_START), "Joypad1 Start");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_L), "Joypad1 L");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_R), "Joypad1 R");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_LEFT), "Joypad1 Left");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_RIGHT), "Joypad1 Right");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_UP), "Joypad1 Up");
-	MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_DOWN), "Joypad1 Down");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_B), "Joypad1 B");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_X), "Joypad1 X");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_Y), "Joypad1 Y");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_SELECT), "Joypad1 Select");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_START), "Joypad1 Start");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_L), "Joypad1 L");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_R), "Joypad1 R");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_LEFT), "Joypad1 Left");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_RIGHT), "Joypad1 Right");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_UP), "Joypad1 Up");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_DOWN), "Joypad1 Down");
 
    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_A), "Joypad2 A");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_B), "Joypad2 B");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_X), "Joypad2 X");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_Y), "Joypad2 Y");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_SELECT), "Joypad2 Select");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_START), "Joypad2 Start");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_L), "Joypad2 L");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_R), "Joypad2 R");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_LEFT), "Joypad2 Left");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_RIGHT), "Joypad2 Right");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_UP), "Joypad2 Up");
-	MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_DOWN), "Joypad2 Down");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_B), "Joypad2 B");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_X), "Joypad2 X");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_Y), "Joypad2 Y");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_SELECT), "Joypad2 Select");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_START), "Joypad2 Start");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_L), "Joypad2 L");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_R), "Joypad2 R");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_LEFT), "Joypad2 Left");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_RIGHT), "Joypad2 Right");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_UP), "Joypad2 Up");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_DOWN), "Joypad2 Down");
 }
 
 static void report_buttons()
@@ -554,61 +554,61 @@ void S9xAutoSaveSRAM()
 // S9x weirdness.
 void _splitpath (const char *path, char *drive, char *dir, char *fname, char *ext)
 {
-	*drive = 0;
+   *drive = 0;
 
-	const char	*slash = strrchr(path, SLASH_CHAR),
-				*dot   = strrchr(path, '.');
+   const char	*slash = strrchr(path, SLASH_CHAR),
+         *dot   = strrchr(path, '.');
 
-	if (dot && slash && dot < slash)
-		dot = NULL;
+   if (dot && slash && dot < slash)
+      dot = NULL;
 
-	if (!slash)
-	{
-		*dir = 0;
+   if (!slash)
+   {
+      *dir = 0;
 
-		strcpy(fname, path);
+      strcpy(fname, path);
 
-		if (dot)
-		{
-			fname[dot - path] = 0;
-			strcpy(ext, dot + 1);
-		}
-		else
-			*ext = 0;
-	}
-	else
-	{
-		strcpy(dir, path);
-		dir[slash - path] = 0;
+      if (dot)
+      {
+         fname[dot - path] = 0;
+         strcpy(ext, dot + 1);
+      }
+      else
+         *ext = 0;
+   }
+   else
+   {
+      strcpy(dir, path);
+      dir[slash - path] = 0;
 
-		strcpy(fname, slash + 1);
+      strcpy(fname, slash + 1);
 
-		if (dot)
-		{
-			fname[dot - slash - 1] = 0;
-			strcpy(ext, dot + 1);
-		}
-		else
-			*ext = 0;
-	}
+      if (dot)
+      {
+         fname[dot - slash - 1] = 0;
+         strcpy(ext, dot + 1);
+      }
+      else
+         *ext = 0;
+   }
 }
 
 void _makepath (char *path, const char *, const char *dir, const char *fname, const char *ext)
 {
-	if (dir && *dir)
-	{
-		strcpy(path, dir);
-		strcat(path, SLASH_STR);
-	}
-	else
-		*path = 0;
+   if (dir && *dir)
+   {
+      strcpy(path, dir);
+      strcat(path, SLASH_STR);
+   }
+   else
+      *path = 0;
 
-	strcat(path, fname);
+   strcat(path, fname);
 
-	if (ext && *ext)
-	{
-		strcat(path, ".");
-		strcat(path, ext);
-	}
+   if (ext && *ext)
+   {
+      strcat(path, ".");
+      strcat(path, ext);
+   }
 }
 
