@@ -347,6 +347,7 @@ static int16_t snes_justifier_state[2][2] = {{0}, {0}};
 static void report_buttons()
 {
    static int frame = 0;
+   int _x, _y;
    for (int port = SNES_PORT_1; port <= SNES_PORT_2; port++)
    {
       switch (snes_devices[port])
@@ -363,9 +364,11 @@ static void report_buttons()
             break;
 
          case SNES_DEVICE_MOUSE:
-            snes_mouse_state[port][0] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, SNES_DEVICE_ID_MOUSE_X);
-            snes_mouse_state[port][1] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, SNES_DEVICE_ID_MOUSE_Y);
-            fprintf(stderr, "Frame: %d, Mouse state: %d, %d\n", frame++, (int)snes_mouse_state[port][0], (int)snes_mouse_state[port][1]);
+            _x = s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, SNES_DEVICE_ID_MOUSE_X);
+            _y = s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, SNES_DEVICE_ID_MOUSE_Y);
+            snes_mouse_state[port][0] += _x;
+            snes_mouse_state[port][1] += _y;
+            fprintf(stderr, "Frame: %d, _x: %d, _y: %d, Mouse state: %d, %d\n", frame++, _x, _y, (int)snes_mouse_state[port][0], (int)snes_mouse_state[port][1]);
             S9xReportPointer(BTN_POINTER + port, snes_mouse_state[port][0], snes_mouse_state[port][1]);
             for (int i = MOUSE_LEFT; i <= MOUSE_LAST; i++)
                S9xReportButton(MAKE_BUTTON(port + 1, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, i));
@@ -651,7 +654,7 @@ bool8 S9xContinueUpdate(int width, int height)
 // Dummy functions that should probably be implemented correctly later.
 void S9xParsePortConfig(ConfigFile&, int) {}
 void S9xSyncSpeed() {}
-void S9xPollPointer(int, short*, short*) {}
+//void S9xPollPointer(int, short*, short*) {}
 const char* S9xStringInput(const char* in) { return in; }
 const char* S9xGetFilename(const char* in, s9x_getdirtype) { return in; }
 const char* S9xGetDirectory(s9x_getdirtype) { return NULL; }
