@@ -154,6 +154,8 @@ bool snes_load_cartridge_super_game_boy(
    return false;
 }
 
+static void map_buttons();
+
 
 void snes_init()
 {
@@ -203,6 +205,16 @@ void snes_init()
    GFX.Pitch = 2048;
    GFX.Screen = (uint16*) calloc(1, GFX.Pitch * 512 * sizeof(uint16));
    S9xGraphicsInit();
+
+   S9xInitInputDevices();
+   for (int i = 0; i < 2; i++)
+   {
+      S9xSetController(i, CTL_JOYPAD, i, 0, 0, 0);
+      snes_devices[i] = SNES_DEVICE_JOYPAD;
+   }
+
+   S9xUnmapAllControls();
+   map_buttons();
 }
 
 #define MAP_BUTTON(id, name) S9xMapButton((id), S9xGetCommandT((name)), false)
@@ -252,8 +264,8 @@ void snes_init()
 #define JUSTIFIER_FIRST JUSTIFIER_X
 #define JUSTIFIER_LAST JUSTIFIER_START
 
-#define BTN_POINTER 64
-#define BTN_POINTER2 65
+#define BTN_POINTER (BTN_LAST + 1)
+#define BTN_POINTER2 (BTN_POINTER + 1)
 
 static void map_buttons()
 {
@@ -329,32 +341,34 @@ static void map_buttons()
 // libsnes uses relative values for analogue devices. 
 // S9x seems to use absolute values, but do convert these into relative values in the core. (Why?!)
 // Hack around it. :)
-int16_t snes_mouse_state[2][2] = {{0}, {0}};
-int16_t snes_scope_state[2] = {0};
-int16_t snes_justifier_state[2][2] = {{0}, {0}};
+static int16_t snes_mouse_state[2][2] = {{0}, {0}};
+static int16_t snes_scope_state[2] = {0};
+static int16_t snes_justifier_state[2][2] = {{0}, {0}};
 static void report_buttons()
 {
+   static int frame = 0;
    for (int port = SNES_PORT_1; port <= SNES_PORT_2; port++)
    {
       switch (snes_devices[port])
       {
          case SNES_DEVICE_JOYPAD:
             for (int i = BTN_FIRST; i <= BTN_LAST; i++)
-               S9xReportButton(MAKE_BUTTON(port, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JOYPAD, 0, i));
+               S9xReportButton(MAKE_BUTTON(port + 1, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JOYPAD, 0, i));
             break;
 
          case SNES_DEVICE_MULTITAP:
             for (int j = 0; j < 4; j++)
                for (int i = BTN_FIRST; i <= BTN_LAST; i++)
-                  S9xReportButton(MAKE_BUTTON(j + 1, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MULTITAP, j, i));
+                  S9xReportButton(MAKE_BUTTON(j + 2, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MULTITAP, j, i));
             break;
 
          case SNES_DEVICE_MOUSE:
             snes_mouse_state[port][0] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, SNES_DEVICE_ID_MOUSE_X);
             snes_mouse_state[port][1] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, SNES_DEVICE_ID_MOUSE_Y);
+            fprintf(stderr, "Frame: %d, Mouse state: %d, %d\n", frame++, (int)snes_mouse_state[port][0], (int)snes_mouse_state[port][1]);
             S9xReportPointer(BTN_POINTER + port, snes_mouse_state[port][0], snes_mouse_state[port][1]);
             for (int i = MOUSE_LEFT; i <= MOUSE_LAST; i++)
-               S9xReportButton(BTN_POINTER + port, s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, i));
+               S9xReportButton(MAKE_BUTTON(port + 1, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, i));
             break;
 
          case SNES_DEVICE_SUPER_SCOPE:
@@ -362,16 +376,16 @@ static void report_buttons()
             snes_scope_state[1] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_SUPER_SCOPE, 0, SNES_DEVICE_ID_SUPER_SCOPE_Y);
             S9xReportPointer(BTN_POINTER, snes_scope_state[0], snes_scope_state[1]);
             for (int i = SCOPE_TRIGGER; i <= SCOPE_LAST; i++)
-               S9xReportButton(MAKE_BUTTON(port, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_SUPER_SCOPE, 0, i));
+               S9xReportButton(MAKE_BUTTON(port + 1, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_SUPER_SCOPE, 0, i));
             break;
 
          case SNES_DEVICE_JUSTIFIER:
          case SNES_DEVICE_JUSTIFIERS:
             snes_justifier_state[0][0] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JUSTIFIER, 0, SNES_DEVICE_ID_JUSTIFIER_X);
-            snes_justifier_state[0][1] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JUSTIFIER, 0, SNES_DEVICE_ID_JUSTIFIER_X);
+            snes_justifier_state[0][1] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JUSTIFIER, 0, SNES_DEVICE_ID_JUSTIFIER_Y);
             S9xReportPointer(BTN_POINTER, snes_justifier_state[0][0], snes_justifier_state[0][1]);
             for (int i = JUSTIFIER_TRIGGER; i <= JUSTIFIER_LAST; i++)
-               S9xReportButton(MAKE_BUTTON(port, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JUSTIFIER, 0, i));
+               S9xReportButton(MAKE_BUTTON(port + 1, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JUSTIFIER, 0, i));
             break;
             
          default:
@@ -404,16 +418,7 @@ bool snes_load_cartridge_normal(const char *, const uint8_t *rom_data, unsigned 
    }
    unlink(S9X_TMP_ROM_PATH);
 
-   S9xInitInputDevices();
-   for (int i = 0; i < 2; i++)
-   {
-      S9xSetController(i, CTL_JOYPAD, i, 0, 0, 0);
-      snes_devices[i] = SNES_DEVICE_JOYPAD;
-   }
-
-   S9xUnmapAllControls();
-   map_buttons();
-
+   
    return true;
 }
 
