@@ -80,8 +80,40 @@ void snes_reset()
    S9xSoftReset();
 }
 
-void snes_set_controller_port_device(bool, unsigned)
-{}
+static unsigned snes_devices[2];
+void snes_set_controller_port_device(bool in_port, unsigned device)
+{
+   int port = in_port == SNES_PORT_1 ? 0 : 1;
+   switch (device)
+   {
+      case SNES_DEVICE_JOYPAD:
+         S9xSetController(port, CTL_JOYPAD, 0, 0, 0, 0);
+         snes_devices[port] = SNES_DEVICE_JOYPAD;
+         break;
+      case SNES_DEVICE_MULTITAP:
+         S9xSetController(port, CTL_MP5, 1, 2, 3, 4);
+         snes_devices[port] = SNES_DEVICE_MULTITAP;
+         break;
+      case SNES_DEVICE_MOUSE:
+         S9xSetController(port, CTL_MOUSE, 0, 0, 0, 0);
+         snes_devices[port] = SNES_DEVICE_MOUSE;
+         break;
+      case SNES_DEVICE_SUPER_SCOPE:
+         S9xSetController(port, CTL_SUPERSCOPE, 0, 0, 0, 0);
+         snes_devices[port] = SNES_DEVICE_SUPER_SCOPE;
+         break;
+      case SNES_DEVICE_JUSTIFIER:
+         S9xSetController(port, CTL_JUSTIFIER, 0, 0, 0, 0);
+         snes_devices[port] = SNES_DEVICE_JUSTIFIER;
+         break;
+      case SNES_DEVICE_JUSTIFIERS:
+         S9xSetController(port, CTL_JUSTIFIER, 1, 0, 0, 0);
+         snes_devices[port] = SNES_DEVICE_JUSTIFIERS;
+         break;
+      default:
+         fprintf(stderr, "[libsnes]: Invalid device!\n");
+   }
+}
 
 void snes_cheat_reset()
 {}
@@ -178,6 +210,9 @@ void snes_init()
 
 #define PAD_1 1
 #define PAD_2 2
+#define PAD_3 3
+#define PAD_4 4
+#define PAD_5 5
 
 #define BTN_B SNES_DEVICE_ID_JOYPAD_B
 #define BTN_Y SNES_DEVICE_ID_JOYPAD_Y
@@ -194,41 +229,155 @@ void snes_init()
 #define BTN_FIRST BTN_B
 #define BTN_LAST BTN_R
 
+#define MOUSE_X SNES_DEVICE_ID_MOUSE_X
+#define MOUSE_Y SNES_DEVICE_ID_MOUSE_Y
+#define MOUSE_LEFT SNES_DEVICE_ID_MOUSE_LEFT
+#define MOUSE_RIGHT SNES_DEVICE_ID_MOUSE_RIGHT
+#define MOUSE_FIRST MOUSE_X
+#define MOUSE_LAST MOUSE_RIGHT
+
+#define SCOPE_X SNES_DEVICE_ID_SUPER_SCOPE_X
+#define SCOPE_Y SNES_DEVICE_ID_SUPER_SCOPE_Y
+#define SCOPE_TRIGGER SNES_DEVICE_ID_SUPER_SCOPE_TRIGGER
+#define SCOPE_CURSOR SNES_DEVICE_ID_SUPER_SCOPE_CURSOR
+#define SCOPE_TURBO SNES_DEVICE_ID_SUPER_SCOPE_TURBO
+#define SCOPE_PAUSE SNES_DEVICE_ID_SUPER_SCOPE_PAUSE
+#define SCOPE_FIRST SCOPE_X
+#define SCOPE_LAST SCOPE_PAUSE
+
+#define JUSTIFIER_X SNES_DEVICE_ID_JUSTIFIER_X
+#define JUSTIFIER_Y SNES_DEVICE_ID_JUSTIFIER_Y
+#define JUSTIFIER_TRIGGER SNES_DEVICE_ID_JUSTIFIER_TRIGGER
+#define JUSTIFIER_START SNES_DEVICE_ID_JUSTIFIER_START
+#define JUSTIFIER_FIRST JUSTIFIER_X
+#define JUSTIFIER_LAST JUSTIFIER_START
+
+#define BTN_POINTER 64
+#define BTN_POINTER2 65
+
 static void map_buttons()
 {
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_A), "Joypad1 A");
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_B), "Joypad1 B");
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_X), "Joypad1 X");
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_Y), "Joypad1 Y");
-   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_SELECT), "Joypad1 Select");
-   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_START), "Joypad1 Start");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_SELECT), "{Joypad1 Select,Mouse1 L}");
+   MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_START), "{Joypad1 Start,Mouse1 R}");
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_L), "Joypad1 L");
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_R), "Joypad1 R");
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_LEFT), "Joypad1 Left");
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_RIGHT), "Joypad1 Right");
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_UP), "Joypad1 Up");
    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_DOWN), "Joypad1 Down");
+   S9xMapPointer((BTN_POINTER), S9xGetCommandT("Pointer Mouse1+Superscope+Justifier1"), false);
+   S9xMapPointer((BTN_POINTER2), S9xGetCommandT("Pointer Mouse2"), false);
 
    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_A), "Joypad2 A");
    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_B), "Joypad2 B");
    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_X), "Joypad2 X");
    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_Y), "Joypad2 Y");
-   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_SELECT), "Joypad2 Select");
-   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_START), "Joypad2 Start");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_SELECT), "{Joypad2 Select,Mouse2 L,Superscope Fire,Justifier1 Trigger}");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_START), "{Joypad2 Start,Mouse2 R,Superscope Cursor,Justifier1 Start}");
    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_L), "Joypad2 L");
    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_R), "Joypad2 R");
    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_LEFT), "Joypad2 Left");
    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_RIGHT), "Joypad2 Right");
-   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_UP), "Joypad2 Up");
-   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_DOWN), "Joypad2 Down");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_UP), "{Joypad2 Up,Superscope ToggleTurbo}");
+   MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_DOWN), "{Joypad2 Down,Superscope Pause}");
+
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_A), "Joypad3 A");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_B), "Joypad3 B");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_X), "Joypad3 X");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_Y), "Joypad3 Y");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_SELECT), "Joypad3 Select");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_START), "Joypad3 Start");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_L), "Joypad3 L");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_R), "Joypad3 R");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_LEFT), "Joypad3 Left");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_RIGHT), "Joypad3 Right");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_UP), "Joypad3 Up");
+   MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_DOWN), "Joypad3 Down");
+
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_A), "Joypad4 A");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_B), "Joypad4 B");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_X), "Joypad4 X");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_Y), "Joypad4 Y");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_SELECT), "Joypad4 Select");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_START), "Joypad4 Start");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_L), "Joypad4 L");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_R), "Joypad4 R");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_LEFT), "Joypad4 Left");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_RIGHT), "Joypad4 Right");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_UP), "Joypad4 Up");
+   MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_DOWN), "Joypad4 Down");
+
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_A), "Joypad5 A");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_B), "Joypad5 B");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_X), "Joypad5 X");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_Y), "Joypad5 Y");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_SELECT), "Joypad5 Select");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_START), "Joypad5 Start");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_L), "Joypad5 L");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_R), "Joypad5 R");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_LEFT), "Joypad5 Left");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_RIGHT), "Joypad5 Right");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_UP), "Joypad5 Up");
+   MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_DOWN), "Joypad5 Down");
+
 }
 
+// libsnes uses relative values for analogue devices. 
+// S9x seems to use absolute values, but do convert these into relative values in the core. (Why?!)
+// Hack around it. :)
+int16_t snes_mouse_state[2][2] = {{0}, {0}};
+int16_t snes_scope_state[2] = {0};
+int16_t snes_justifier_state[2][2] = {{0}, {0}};
 static void report_buttons()
 {
-   for (int pad = PAD_1; pad <= PAD_2; pad++)
+   for (int port = SNES_PORT_1; port <= SNES_PORT_2; port++)
    {
-      for (int i = BTN_FIRST; i <= BTN_LAST; i++)
-         S9xReportButton(MAKE_BUTTON(pad, i), s9x_input_state_cb(pad == PAD_2, SNES_DEVICE_JOYPAD, 0, i));
+      switch (snes_devices[port])
+      {
+         case SNES_DEVICE_JOYPAD:
+            for (int i = BTN_FIRST; i <= BTN_LAST; i++)
+               S9xReportButton(MAKE_BUTTON(port, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JOYPAD, 0, i));
+            break;
+
+         case SNES_DEVICE_MULTITAP:
+            for (int j = 0; j < 4; j++)
+               for (int i = BTN_FIRST; i <= BTN_LAST; i++)
+                  S9xReportButton(MAKE_BUTTON(j + 1, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MULTITAP, j, i));
+            break;
+
+         case SNES_DEVICE_MOUSE:
+            snes_mouse_state[port][0] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, SNES_DEVICE_ID_MOUSE_X);
+            snes_mouse_state[port][1] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, SNES_DEVICE_ID_MOUSE_Y);
+            S9xReportPointer(BTN_POINTER + port, snes_mouse_state[port][0], snes_mouse_state[port][1]);
+            for (int i = MOUSE_LEFT; i <= MOUSE_LAST; i++)
+               S9xReportButton(BTN_POINTER + port, s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_MOUSE, 0, i));
+            break;
+
+         case SNES_DEVICE_SUPER_SCOPE:
+            snes_scope_state[0] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_SUPER_SCOPE, 0, SNES_DEVICE_ID_SUPER_SCOPE_X);
+            snes_scope_state[1] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_SUPER_SCOPE, 0, SNES_DEVICE_ID_SUPER_SCOPE_Y);
+            S9xReportPointer(BTN_POINTER, snes_scope_state[0], snes_scope_state[1]);
+            for (int i = SCOPE_TRIGGER; i <= SCOPE_LAST; i++)
+               S9xReportButton(MAKE_BUTTON(port, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_SUPER_SCOPE, 0, i));
+            break;
+
+         case SNES_DEVICE_JUSTIFIER:
+         case SNES_DEVICE_JUSTIFIERS:
+            snes_justifier_state[0][0] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JUSTIFIER, 0, SNES_DEVICE_ID_JUSTIFIER_X);
+            snes_justifier_state[0][1] += s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JUSTIFIER, 0, SNES_DEVICE_ID_JUSTIFIER_X);
+            S9xReportPointer(BTN_POINTER, snes_justifier_state[0][0], snes_justifier_state[0][1]);
+            for (int i = JUSTIFIER_TRIGGER; i <= JUSTIFIER_LAST; i++)
+               S9xReportButton(MAKE_BUTTON(port, i), s9x_input_state_cb(port == SNES_PORT_2, SNES_DEVICE_JUSTIFIER, 0, i));
+            break;
+            
+         default:
+            fprintf(stderr, "[libsnes]: Unknown device...\n");
+
+      }
    }
 }
 
@@ -256,8 +405,11 @@ bool snes_load_cartridge_normal(const char *, const uint8_t *rom_data, unsigned 
    unlink(S9X_TMP_ROM_PATH);
 
    S9xInitInputDevices();
-   S9xSetController(0, CTL_JOYPAD, 0, 0, 0, 0);
-   S9xSetController(1, CTL_JOYPAD, 1, 0, 0, 0);
+   for (int i = 0; i < 2; i++)
+   {
+      S9xSetController(i, CTL_JOYPAD, i, 0, 0, 0);
+      snes_devices[i] = SNES_DEVICE_JOYPAD;
+   }
 
    S9xUnmapAllControls();
    map_buttons();
