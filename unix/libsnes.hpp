@@ -1,7 +1,7 @@
 #ifndef LIBSNES_HPP
 #define LIBSNES_HPP
 
-#include <stdint.h>
+#include "port.h"
 
 #ifdef __cplusplus
 extern "C" {

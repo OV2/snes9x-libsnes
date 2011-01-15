@@ -1,7 +1,8 @@
-#include <libsnes.hpp>
+#include "libsnes.hpp"
 
 #include "snes9x.h"
 #include "memmap.h"
+#include "srtc.h"
 #include "apu/apu.h"
 #include "gfx.h"
 #include "snapshot.h"
@@ -12,9 +13,10 @@
 #include "display.h"
 #include "conffile.h"
 #include <stdio.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
+#ifndef __WIN32__
 #include <unistd.h>
+#endif
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
 
@@ -398,43 +400,48 @@ static void report_buttons()
    }
 }
 
-#define S9X_TMP_ROM_PATH "/tmp/.s9x.rom.sfc"
-#define S9X_TMP_SRM_PATH "/tmp/.s9x.srm.tmp"
-#define S9X_TMP_SRM_PATH_2 "/tmp/.s9x.srm.tmp.2"
-#define S9X_TMP_STATE_PATH "/tmp/.s9x.state.tmp"
+#define S9X_TMP_ROM_FILE ".s9x.rom.sfc"
+#define S9X_TMP_STATE_FILE ".s9x.state.tmp"
+
+class s9x_tmp_file {
+private:
+	char tmp_file[PATH_MAX];
+public:
+	s9x_tmp_file(const char *filename) {
+#ifdef __WIN32__
+		GetTempPath(PATH_MAX,tmp_file);
+#else
+		sprintf(tmp_file,"%s","/tmp/");
+#endif
+		strcat(tmp_file,filename);
+	}
+	operator char *() { return tmp_file; }
+};
 
 bool snes_load_cartridge_normal(const char *, const uint8_t *rom_data, unsigned rom_size)
 {
    // Hack. S9x cannot do stuff from RAM. <_<
-   FILE *file = fopen(S9X_TMP_ROM_PATH, "wb");
+   FILE *file = fopen(s9x_tmp_file(S9X_TMP_ROM_FILE), "wb");
    if (!file)
       return false;
 
    fwrite(rom_data, 1, rom_size, file);
    fclose(file);
 
-   int loaded = Memory.LoadROM(S9X_TMP_ROM_PATH);
+   int loaded = Memory.LoadROM(s9x_tmp_file(S9X_TMP_ROM_FILE));
    if (!loaded)
    {
       fprintf(stderr, "[libsnes]: Rom loading failed...\n");
       return false;
    }
-   unlink(S9X_TMP_ROM_PATH);
-
+   unlink(s9x_tmp_file(S9X_TMP_ROM_FILE));
    
    return true;
 }
 
-static bool need_load_sram = false;
-static bool first_iteration = true;
 void snes_run()
 {
    // We can't really signal S9x that we need to reload SRAM. Luckily, you'd normally only deal with SRAM at start and end of emulation.
-   if (first_iteration && need_load_sram)
-   {
-      Memory.LoadSRAM(S9X_TMP_SRM_PATH);
-      first_iteration = false;
-   }
    s9x_poller_cb();
    report_buttons();
    S9xMainLoop();
@@ -447,8 +454,7 @@ void snes_term()
    S9xGraphicsDeinit();
    S9xUnmapAllControls();
 
-   unlink(S9X_TMP_SRM_PATH);
-   unlink(S9X_TMP_STATE_PATH);
+   unlink(s9x_tmp_file(S9X_TMP_STATE_FILE));
 }
 
 
@@ -457,81 +463,49 @@ bool snes_get_region()
    return Settings.PAL ? SNES_REGION_PAL : SNES_REGION_NTSC; 
 }
 
-// We need to get really dirty here... Have to MMAP a save file :(
-static void *sram_mapped = NULL;
-static int mmap_fd = -1;
-static ssize_t mmap_len = -1;
-
 uint8_t* snes_get_memory_data(unsigned type)
 {
-   if (type != SNES_MEMORY_CARTRIDGE_RAM)
-      return NULL;
+   uint8_t* data;
 
-   // Set up a memory map for SRAM.
-   if (sram_mapped == NULL)
-   {
-      Memory.SaveSRAM(S9X_TMP_SRM_PATH);
-
-      mmap_fd = open(S9X_TMP_SRM_PATH, O_RDWR);
-      if (mmap_fd == -1)
-         return NULL;
-
-      struct stat info;
-      fstat(mmap_fd, &info);
-
-      sram_mapped = mmap(NULL, info.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, mmap_fd, 0);
-      if (!sram_mapped)
-      {
-         fprintf(stderr, "[libsnes]: MMAP failed!\n");
-         close(mmap_fd);
-         mmap_fd = -1;
-         return NULL;
-      }
-      mmap_len = info.st_size;
+   switch(type) {
+      case SNES_MEMORY_CARTRIDGE_RAM:
+         data = Memory.SRAM;
+		 break;
+	  case SNES_MEMORY_CARTRIDGE_RTC:
+	     data = RTCData.reg;
+         break;
+	  default:
+	     data = NULL;
+		 break;
    }
 
-   need_load_sram = true;
-   return (uint8_t*)sram_mapped;
+   return data;
 }
 
 void snes_unload_cartridge()
 {
-   need_load_sram = false;
-   first_iteration = true;
 
-   if (sram_mapped)
-   {
-      munmap(sram_mapped, mmap_len);
-      sram_mapped = NULL;
-      mmap_len = -1;
-   }
-   if (mmap_fd >= 0)
-   {
-      close(mmap_fd);
-      mmap_fd = -1;
-   }
 }
 
 unsigned snes_get_memory_size(unsigned type)
 {
-   if (type != SNES_MEMORY_CARTRIDGE_RAM)
-      return 0;
+   unsigned size;
 
-   // If we already know the size, return it.
-   if (mmap_len >= 0)
-      return mmap_len;
+   switch(type) {
+      case SNES_MEMORY_CARTRIDGE_RAM:
+         size = (unsigned) (Memory.SRAMSize ? (1 << (Memory.SRAMSize + 3)) * 128 : 0);
+         if (size > 0x20000)
+		    size = 0x20000;
+		 break;
+	  case SNES_MEMORY_CARTRIDGE_RTC:
+		 size = (Settings.SRTC || Settings.SPC7110RTC)?20:0;
+		 break;
+	  default:
+	     size = 0;
+		 break;
+   }
 
-   // Hack :)
-   Memory.SaveSRAM(S9X_TMP_SRM_PATH_2);
-   FILE *tmp = fopen(S9X_TMP_SRM_PATH_2, "rb");
-   if (!tmp)
-      return 0;
-   fseek(tmp, 0, SEEK_END);
-   long len = ftell(tmp);
-   fclose(tmp);
-
-   unlink(S9X_TMP_SRM_PATH_2);
-   return (unsigned)len;
+   return size;
 }
 
 void snes_set_cartridge_basename(const char*)
@@ -540,12 +514,12 @@ void snes_set_cartridge_basename(const char*)
 #if S9X_SAVESTATES
 unsigned snes_serialize_size()
 {
-   if (S9xFreezeGame(S9X_TMP_STATE_PATH) == FALSE)
+   if (S9xFreezeGame(s9x_tmp_file(S9X_TMP_STATE_FILE)) == FALSE)
    {
       return 0;
    }
 
-   FILE *tmp = fopen(S9X_TMP_STATE_PATH, "rb");
+   FILE *tmp = fopen(s9x_tmp_file(S9X_TMP_STATE_FILE), "rb");
    if (!tmp)
       return 0;
 
@@ -558,12 +532,12 @@ unsigned snes_serialize_size()
 
 bool snes_serialize(uint8_t *data, unsigned size)
 { 
-   if (S9xFreezeGame(S9X_TMP_STATE_PATH) == FALSE)
+   if (S9xFreezeGame(s9x_tmp_file(S9X_TMP_STATE_FILE)) == FALSE)
    {
       return false;
    }
 
-   FILE *tmp = fopen(S9X_TMP_STATE_PATH, "rb");
+   FILE *tmp = fopen(s9x_tmp_file(S9X_TMP_STATE_FILE), "rb");
    if (!tmp)
    {
       return false;
@@ -581,7 +555,7 @@ bool snes_serialize(uint8_t *data, unsigned size)
 
 bool snes_unserialize(const uint8_t* data, unsigned size)
 { 
-   FILE *tmp = fopen(S9X_TMP_STATE_PATH, "wb");
+   FILE *tmp = fopen(s9x_tmp_file(S9X_TMP_STATE_FILE), "wb");
    if (!tmp)
    {
       return false;
@@ -590,7 +564,7 @@ bool snes_unserialize(const uint8_t* data, unsigned size)
    fwrite(data, 1, size, tmp);
    fclose(tmp);
 
-   if (S9xUnfreezeGame(S9X_TMP_STATE_PATH) == FALSE)
+   if (S9xUnfreezeGame(s9x_tmp_file(S9X_TMP_STATE_FILE)) == FALSE)
    {
       return false;
    }
@@ -708,9 +682,10 @@ void S9xCloseSnapshotFile(STREAM file) {}
 
 void S9xAutoSaveSRAM() 
 {
-   Memory.SaveSRAM(S9X_TMP_SRM_PATH);
+   return;
 }
 
+#ifndef __WIN32__
 // S9x weirdness.
 void _splitpath (const char *path, char *drive, char *dir, char *fname, char *ext)
 {
@@ -771,4 +746,4 @@ void _makepath (char *path, const char *, const char *dir, const char *fname, co
       strcat(path, ext);
    }
 }
-
+#endif // __WIN32__

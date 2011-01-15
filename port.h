@@ -201,7 +201,9 @@
 #define RIGHTSHIFT_int8_IS_SAR
 #define RIGHTSHIFT_int16_IS_SAR
 #define RIGHTSHIFT_int32_IS_SAR
+#ifndef __WIN32_LIBSNES__
 #define SNES_JOY_READ_CALLBACKS
+#endif //__WIN32_LIBSNES__
 #endif
 
 #ifdef __MACOSX__
@@ -248,6 +250,8 @@ typedef signed int			int32;
 typedef unsigned int		uint32;
 #endif
 typedef unsigned char		uint8_t;
+typedef unsigned short		uint16_t;
+typedef signed short		int16_t;
 typedef signed __int64		int64;
 typedef unsigned __int64	uint64;
 typedef int					socklen_t;
@@ -302,10 +306,14 @@ void _makepath (char *, const char *, const char *, const char *, const char *);
 #define snprintf _snprintf
 #define strcasecmp	stricmp
 #define strncasecmp	strnicmp
+#ifdef __WIN32_LIBSNES__
+#define S9xDisplayString	DisplayStringFromBottom
+#else //__WIN32_LIBSNES__
 void WinDisplayStringFromBottom(const char *string, int linesFromBottom, int pixelsFromLeft, bool allowWrap);
 #define S9xDisplayString	WinDisplayStringFromBottom
 void SetInfoDlgColor(unsigned char, unsigned char, unsigned char);
 #define SET_UI_COLOR(r,g,b) SetInfoDlgColor(r,g,b)
+#endif //__WIN32_LIBSNES__
 #endif
 
 #ifdef __DJGPP
